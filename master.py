@@ -6,8 +6,11 @@ from micropython import const
 import radio
 import random
 import machine
-from net import recv
+from net import recv, buf
 import view
+
+_MSG_STATE = const(0x53)    # 'S', message types: see net.py
+_MSG_PADDLE = const(0x50)   # 'P'
 
 _PAD = const(2)             # paddle length in pixels (keep in sync with view.py)
 _WIN_SCORE = const(5)       # points needed to win (keep in sync with view.py)
@@ -40,6 +43,8 @@ def run(my_id):
     dx, dy = random.choice((-1, 1)), random.choice((-1, 0, 1))
     ball_ms = _BALL_START
     phase = _PLAY
+    state = bytearray(7)              # outgoing S message (reused)
+    state[0] = _MSG_STATE
 
     now = running_time()
     next_ball = now + 1000            # short delay before the first serve
@@ -55,15 +60,12 @@ def run(my_id):
 
         # --- receive the slave's paddle ------------------------------------
         while True:
-            p = recv()
-            if p is None:
+            n = recv()
+            if not n:
                 break
-            if p[0] == "P" and len(p) == 2:
-                try:
-                    pad[1] = min(max(int(p[1]), 0), 5 - _PAD)
-                    last_heard = now
-                except ValueError:
-                    pass              # malformed message, ignore
+            if n == 2 and buf[0] == _MSG_PADDLE and buf[1] <= 5 - _PAD:
+                pad[1] = buf[1]
+                last_heard = now
 
         if now - last_heard > _LINK_TIMEOUT:
             view.lost()
@@ -105,8 +107,13 @@ def run(my_id):
         # --- send the state ------------------------------------------------
         if now >= next_send:
             next_send = now + _TICK
-            radio.send("S:%d:%d:%d:%d:%d:%d" % (
-                bx, by, pad[0], score[0], score[1], phase))
+            state[1] = bx
+            state[2] = by
+            state[3] = pad[0]
+            state[4] = score[0]
+            state[5] = score[1]
+            state[6] = phase
+            radio.send_bytes(state)
 
         view.render(now, phase, pad, 0, bx, by, score)
         sleep(10)
