@@ -17,7 +17,8 @@ import machine
 
 _PAD = const(2)          # paddle length in pixels (keep in sync with master/slave)
 _WIN_SCORE = const(5)    # points needed to win (keep in sync with master.py)
-_MISS_SHOW = const(500)  # how long the missed ball stays visible before the score
+_MISS_SHOW = const(700)     # how long the missed ball stays visible before the score
+_SCORE_DELAY = const(600)   # how long each character of the score ("2-1") is shown
 
 _BRIGHT_ME = const(9)
 _BRIGHT_OTHER = const(4)
@@ -68,7 +69,7 @@ def render(now, phase, pad, me, bx, by, score):
         if phase == _POINT:
             # my score first
             display.show("%d-%d" % (score[me], score[1 - me]),
-                         delay=350, wait=False)
+                         delay=_SCORE_DELAY, wait=False)
         elif score[me] >= _WIN_SCORE:
             display.show(Image.HAPPY)
         else:

@@ -20,7 +20,9 @@ _LINK_TIMEOUT = const(3000) # no message from the slave for this long -> reset
 _BALL_START = const(450)    # ms per ball step at the start of a rally
 _BALL_MIN = const(150)      # fastest ball
 _BALL_SPEEDUP = const(25)   # speedup after each paddle hit
-_PAUSE = const(2000)        # pause after a point (score display)
+# pause after a point; must cover the score display in view.py:
+# _MISS_SHOW + 3 * _SCORE_DELAY = 2500 ms, plus a moment to read it
+_PAUSE = const(3200)
 _OVER_PAUSE = const(3000)   # how long the result is shown before reset
 
 _PLAY = const(0)
