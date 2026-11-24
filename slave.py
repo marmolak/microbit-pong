@@ -1,5 +1,5 @@
 # Slave: sends its paddle, draws the state received from the master.
-# Its paddle is index 1 (right in game coordinates, drawn mirrored on the left).
+# Its paddle is index 1 (the x=4 end in game coordinates, see view.py).
 
 from microbit import sleep, running_time
 from micropython import const
@@ -22,7 +22,7 @@ _OVER = const(2)
 
 
 def run(my_id):
-    pad = [(5 - _PAD) // 2] * 2       # top pixel of each paddle [left, right]
+    pad = [(5 - _PAD) // 2] * 2       # lowest y of each paddle [master, slave]
     score = [0, 0]
     bx, by = 2, 2
     phase = _PLAY

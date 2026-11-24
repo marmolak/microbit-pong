@@ -1,8 +1,14 @@
 # Shared by master and slave: paddle buttons and drawing.
 #
-# The game runs in one shared coordinate system: the master's paddle is on
-# the left (x=0), the slave's on the right (x=4). When drawing, the slave
-# mirrors the field, so every player sees their own paddle on the left.
+# Game coordinates (used by master.py and in radio messages):
+#   x = axis between the players: x=0 is the master's end, x=4 the slave's
+#   y = sideways position of the ball and the paddles
+#
+# On the screen every player has their own paddle at the bottom and the
+# opponent's at the top; the ball flies up and down between them. The
+# slave's view is only flipped top to bottom, so sideways positions are the
+# same on both screens: a paddle on the left is on the left for both
+# players. Button A moves your paddle left, B right.
 # Your own paddle is also brighter than the opponent's.
 
 from microbit import display, button_a, button_b, sleep, Image
@@ -26,20 +32,21 @@ phase_changed = 0     # when it changed (ms)
 msg_shown = False     # score / result already shown for this phase
 
 
-# Move my paddle (index me in pad) by the buttons. Returns True if it moved.
+# Move my paddle (index me in pad) by the buttons: A left, B right.
+# Returns True if it moved.
 def buttons(pad, me):
     moved = False
-    if button_a.was_pressed() and pad[me] < 5 - _PAD:
-        pad[me] += 1
-        moved = True
-    if button_b.was_pressed() and pad[me] > 0:
+    if button_a.was_pressed() and pad[me] > 0:
         pad[me] -= 1
+        moved = True
+    if button_b.was_pressed() and pad[me] < 5 - _PAD:
+        pad[me] += 1
         moved = True
     return moved
 
 
 # Draw the field, or the score / result after a point. me is the index of
-# my paddle (0 = master, 1 = slave); my paddle is always drawn on the left.
+# my paddle (0 = master, 1 = slave); my paddle is always drawn at the bottom.
 # Returns how many ms ago the phase changed.
 def render(now, phase, pad, me, bx, by, score):
     global shown_phase, phase_changed, msg_shown
@@ -51,15 +58,15 @@ def render(now, phase, pad, me, bx, by, score):
     if phase == _PLAY or now - phase_changed < _MISS_SHOW:
         img.fill(0)
         for i in range(_PAD):
-            img.set_pixel(0, pad[me] + i, _BRIGHT_ME)          # me: left
-            img.set_pixel(4, pad[1 - me] + i, _BRIGHT_OTHER)   # opponent: right
-        # the slave mirrors the ball's x (master's x=0 is the slave's x=4)
-        img.set_pixel(bx if me == 0 else 4 - bx, by, _BRIGHT_BALL)
+            img.set_pixel(pad[me] + i, 4, _BRIGHT_ME)          # me: bottom
+            img.set_pixel(pad[1 - me] + i, 0, _BRIGHT_OTHER)   # opponent: top
+        # my end of the game x axis is the bottom row (the slave flips it)
+        img.set_pixel(by, 4 - bx if me == 0 else bx, _BRIGHT_BALL)
         display.show(img)
     elif not msg_shown:
         msg_shown = True
         if phase == _POINT:
-            # my score first, matching my paddle on the left
+            # my score first
             display.show("%d-%d" % (score[me], score[1 - me]),
                          delay=350, wait=False)
         elif score[me] >= _WIN_SCORE:

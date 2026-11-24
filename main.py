@@ -19,8 +19,8 @@ from microbit import display, sleep, Image
 import net
 
 is_master, my_id = net.handshake()
-# every player's own paddle is on the left
-display.show(Image.ARROW_W)
+# every player's own paddle is at the bottom: look down
+display.show(Image.ARROW_S)
 
 net.handshake = None    # not needed any more, let gc free its bytecode
 gc.collect()

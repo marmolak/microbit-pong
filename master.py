@@ -1,5 +1,6 @@
 # Master: runs the ball and the score, broadcasts the state.
-# Its paddle is index 0 (left in game coordinates); the slave's comes by radio.
+# Its paddle is index 0 (the x=0 end in game coordinates, see view.py);
+# the slave's paddle comes by radio.
 
 from microbit import sleep, running_time
 from micropython import const
@@ -27,7 +28,7 @@ _POINT = const(1)
 _OVER = const(2)
 
 
-# Bounce off the top/bottom wall. Returns (new_y, new_dy).
+# Bounce off a side wall (y=0 or y=4). Returns (new_y, new_dy).
 def bounce_y(by, dy):
     ny = by + dy
     if ny < 0 or ny > 4:
@@ -37,7 +38,7 @@ def bounce_y(by, dy):
 
 
 def run(my_id):
-    pad = [(5 - _PAD) // 2] * 2       # top pixel of each paddle [left, right]
+    pad = [(5 - _PAD) // 2] * 2       # lowest y of each paddle [master, slave]
     score = [0, 0]
     bx, by = 2, 2
     dx, dy = random.choice((-1, 1)), random.choice((-1, 0, 1))
